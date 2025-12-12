@@ -1,0 +1,40 @@
+const crypto = require("crypto");
+
+/**
+ * X9.63 KDF with SHA-256
+ * @param {Buffer} z - ECDH shared secret
+ * @param {number} keyLen - required key length (16 or 32)
+ */
+function x963KDF(z, keyLen) {
+  let counter = 1;
+  let output = Buffer.alloc(0);
+
+  while (output.length < keyLen) {
+    const hash = crypto.createHash("sha256");
+    const ctr = Buffer.alloc(4);
+    ctr.writeUInt32BE(counter++, 0);
+
+    hash.update(z);
+    hash.update(ctr);
+
+    output = Buffer.concat([output, hash.digest()]);
+  }
+
+  return output.slice(0, keyLen);
+}
+
+function decryptAESGCM(aesKey, iv, ciphertext, tag) {
+    const decipher = crypto.createDecipheriv(
+      "aes-256-gcm",
+      aesKey,
+      iv
+    );
+  
+    decipher.setAuthTag(tag);
+  
+    let plaintext = decipher.update(ciphertext);
+    plaintext = Buffer.concat([plaintext, decipher.final()]);
+  
+    return plaintext;
+  }
+  

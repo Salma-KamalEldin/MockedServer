@@ -2,7 +2,7 @@ import axios from "axios";
 import { config } from "../config/env.js";
 import { saveRecording, loadRecording } from "../utils/fileManager.js";
 
-export async function handleMock(endpoint, decryptedBody) {
+export async function handleMock(method, endpoint, decryptedBody) {
   if (config.mode === "REPLAY") {
     const record = loadRecording(endpoint);
     if (record) return record.response;
@@ -21,17 +21,37 @@ export async function handleMock(endpoint, decryptedBody) {
   if (config.mode === "LIVE") {
     const url = config.mockBackend.replace(/\/$/, "") + endpoint;
     console.log(`[LIVE] Forwarding ${endpoint} → ${url}`);
-    console.log("[LIVE] Decrypted body:", decryptedBody);
+    // console.log("[LIVE] Decrypted body:", decryptedBody);
   
+    const normalizedMethod = (method || "GET").trim().toUpperCase();
+    // console.log("[LIVE] Method:", method);
+
     try {
-      // 🔹 Use GET instead of POST temporarily
-      const liveResponse = await axios.get(url, { timeout: 10000 });
-      console.log("[LIVE] Response from Postman:", liveResponse.status, liveResponse.data);
+      let liveResponse;
+
+      if (normalizedMethod === "GET") {
+        liveResponse = await axios.get(url, {
+          timeout: 10000
+        });
+      } else if (normalizedMethod === "POST") {
+        liveResponse = await axios.post(
+          url,
+          {},
+          { timeout: 10000 }
+        );
+      } else {
+        throw new Error(`Unsupported method: ${method}`);
+      }
+
+      console.log("[LIVE]", normalizedMethod, "Response:", liveResponse.status);
       return liveResponse.data;
+
     } catch (err) {
-      console.error("[LIVE] Error calling Postman mock:", err.message);
+      console.error("[LIVE] Error:", err.message);
       throw err;
     }
+
+    
   }  
 
   throw new Error(`Unknown MODE ${config.mode}`);
