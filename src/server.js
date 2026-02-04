@@ -1,11 +1,9 @@
 import express from "express";
-import bodyParser from "body-parser";
 import fs from "fs";
 import crypto from "crypto";
 import { config } from "./config/env.js";
 import { router as mockRouter } from "./routes/mock.js";
 import { setSharedKey, hasSharedKey } from "./services/sharedKeyStore.js";
-import { cryptoSwiftHKDF } from "./crypto/cryptoSwiftKdf.js";
 
 const app = express();
 
