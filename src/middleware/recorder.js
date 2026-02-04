@@ -23,7 +23,8 @@ export async function handleMock(method, endpoint) {
         throw new Error(`\n Unsupported method: ${method}`);
       }
 
-      console.log(normalizedMethod, "\n Response:", liveResponse.status);
+      console.log("\n Status:", liveResponse.status);
+      console.log("\n Response:", liveResponse.data);
       return liveResponse.data;
 
     } catch (err) {

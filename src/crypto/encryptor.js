@@ -1,9 +1,16 @@
 import { getSharedKey } from "../services/sharedKeyStore.js";
 import crypto from "crypto";
+import { config } from "../config/env.js";
 
-export function secureChannel(req, res, next) {
+export function decryptRequest(req, res, next) {
+  if (config.environment === "DEV") {
+    next();
+    return;
+  }
+
   const key = getSharedKey();
   if (!key) {
+    console.error("\n ❌ Secure channel not initialized - no shared key found");
     return res.status(400).send("Secure channel not initialized");
   }
 
