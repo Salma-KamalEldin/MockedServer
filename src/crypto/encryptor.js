@@ -30,8 +30,8 @@ export function secureChannel(req, res, next) {
     req.decryptedBody = JSON.parse(decrypted.toString("utf8"));
     next();
   } catch (e) {
-    console.error("❌ Decryption failed:", e.message);
-    res.status(400).send("Invalid encrypted payload");
+    console.error("\n ❌ Decryption for the client request failed:", e.message);
+    res.status(400).send("Could not decrypt request body");
   }
 }
 

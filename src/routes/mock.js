@@ -10,31 +10,21 @@ router.use(async (req, res) => {
   
   const iv = Buffer.from(req.headers["x-sec-h1"], "base64");
   try {
+    const endpoint = req.path;
     // GET requests (no request body)
     if (req.method === "GET") {
-      console.log("➡️ GET request detected");
-
-      const endpoint = req.path;
+      console.log("\n ➡️  GET request detected");
       const mockResponse = await handleMock(req.method, endpoint, null);
-
       return sendEncrypted(res, mockResponse, iv);
     }
 
     // NON-GET requests
-   
-    console.log("🔓 Decrypted body:", req.decryptedBody);
-
-    const endpoint = req.path;
-    const mockResponse = await handleMock(
-      req.method,
-      endpoint,
-      req.decryptedBody
-    );
-
+    console.log("\n ➡️  POST request detected: ", req.decryptedBody);
+    const mockResponse = await handleMock(req.method, endpoint, req.decryptedBody);
     return sendEncrypted(res, mockResponse, iv);
 
   } catch (e) {
-    console.error("❌ Error:", e.stack || e);
+    console.error("\n ❌ Error:", e.stack || e);
     res.status(500).send("Error processing request");
   }
 });

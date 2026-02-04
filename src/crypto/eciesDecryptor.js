@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { appleX963KDF } from "./kdf.js";
 import { serverPrivateKeyPem } from "./serverKeys.js";
 
-export function decryptFromIOS(base64Payload) {
+export function deriveSharedKey(base64Payload) {
   const payload = Buffer.from(base64Payload, "base64");
 
   const ephemeralPublicKey = payload.subarray(0, 65);
