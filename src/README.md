@@ -18,3 +18,7 @@ This mock server simulates a secure channel for development purposes.
 
 ### Important
 - This behavior is **mock-only** and must not be used in production.
+
+### Usage
+- Use this command to run server in mock mode => ENVIRONMENT=DEV node src/server.js
+- Use this command to run server is secure mode => ENVIRONMENT=SECURE node src/server.js
