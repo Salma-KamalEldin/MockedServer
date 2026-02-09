@@ -82,6 +82,10 @@ router.use(async (req, res) => {
     // 🔐 PROD / Secure Channel [POSTMAN => BE server]
   } else if (config.environment === "BE") {
     const response = await forwardToBE(req, res, endpoint);
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.mpesa.secure-v1+octet-stream;charset=UTF-8"
+    );
     return res.send(response.data);
   } else {
     // 🔐 PROD / Secure Channel [Mobile => Mock server]
