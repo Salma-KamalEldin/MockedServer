@@ -1,4 +1,4 @@
-import { getSharedKey } from "../services/sharedKeyStore.js";
+import { getIv, getSharedKey } from "../services/sharedKeyStore.js";
 import crypto from "crypto";
 import { config } from "../config/env.js";
 
@@ -79,32 +79,44 @@ export function encryptRequest(payload) {
   return finalPayload;
 }
 
-export function decryptResponse(payload) {
-  const key = getSharedKey();
-  if (!key) {
-    console.error("\n ❌ Secure channel not initialized - no shared key found");
-    return res.status(400).send("Secure channel not initialized");
-  }
-
+export function decryptResponse(res) {
+  const sharedSecretBase64 = getSharedKey();
+  console.log("Shared Secret", sharedSecretBase64);
+  const key = Buffer.from(sharedSecretBase64, 'base64');
+  
+  // 1. Try to get IV from Response Header first!
+  const iv = Buffer.from(getIv(), 'base64');
+  console.log("IV", getIv());
+  
   try {
-    const iv = Buffer.from(req.headers["x-sec-h1"], "base64");
-    const encrypted = Buffer.from(req.body.toString(), "base64");
+      // const body = res.data;
+      // if (typeof body !== 'string') throw new Error("Body is not a string");
+      
+      // const encrypted = Buffer.from(body, "binary");
+      const encrypted = res.data;
 
-    const authTag = encrypted.slice(encrypted.length - 16);
-    const ciphertext = encrypted.slice(0, encrypted.length - 16);
+      // Standard: Tag is the last 16 bytes
+      const tag = encrypted.subarray(encrypted.length - 16);
+      const ciphertext = encrypted.subarray(0, encrypted.length - 16);
 
-    const decipher = crypto.createDecipheriv("aes-128-gcm", key, iv);
-    decipher.setAuthTag(authTag);
+      console.log("Key Length:", key.length);
+      console.log("IV (Hex):", iv.toString('hex'));
+      console.log("Tag (Hex):", tag.toString('hex'));
 
-    const decrypted = Buffer.concat([
-      decipher.update(ciphertext),
-      decipher.final()
-    ]);
+      const decipher = crypto.createDecipheriv("aes-128-gcm", key, iv);
+      decipher.setAuthTag(tag);
 
-    req.decryptedBody = JSON.parse(decrypted.toString("utf8"));
-    next();
+      const decrypted = Buffer.concat([
+          decipher.update(ciphertext),
+          decipher.final()
+      ]);
+
+      res.data = JSON.parse(decrypted.toString("utf8"))
+      console.log("Decrypted Response:", res.data);
+      return res;
   } catch (e) {
-    console.error("\n ❌ Decryption for the client request failed:", e.message);
-    res.status(400).send("Could not decrypt request body");
+      // If it fails, log the values so we can compare with iOS logs
+      console.error("Error Details:", e.message);
+      throw e;
   }
 }

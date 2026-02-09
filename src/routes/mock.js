@@ -46,12 +46,7 @@ async function forwardToBE(req, res, endpoint) {
   
   try {
     const isGet = req.method === "GET";
-    const response = await handleForwardToBE(
-      req.method,
-      endpoint,
-      isGet ? null : req.decryptedBody,
-      req.headers
-    );
+    const response = await handleForwardToBE(endpoint, req);
 
     return decryptResponse(response);
   } catch (e) {
@@ -86,7 +81,8 @@ router.use(async (req, res) => {
     return res.send(response);
     // 🔐 PROD / Secure Channel [POSTMAN => BE server]
   } else if (config.environment === "BE") {
-    return forwardToBE(req, res, endpoint);
+    const response = await forwardToBE(req, res, endpoint);
+    return res.send(response.data);
   } else {
     // 🔐 PROD / Secure Channel [Mobile => Mock server]
     return handleSecureChannel(req, res, endpoint);
